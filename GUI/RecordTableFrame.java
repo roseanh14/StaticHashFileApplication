@@ -1,5 +1,7 @@
 package GUI;
 
+import Algorithm.StaticHashFile;
+import Data.FileHeader;
 import Data.MunicipalityRecord;
 
 import javax.swing.BorderFactory;
@@ -20,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class RecordTableFrame extends JFrame {
-    private final DatabaseManagerBridge manager;
+    private final StaticHashFile hashFile;
     private final DefaultTableModel model;
     private final JTextField searchField;
     private final JTextField insertNameField;
@@ -28,8 +30,8 @@ public class RecordTableFrame extends JFrame {
     private final JTextField insertAltitudeField;
     private final JTextField deleteField;
 
-    public RecordTableFrame(DatabaseManagerBridge manager) throws IOException {
-        this.manager = manager;
+    public RecordTableFrame(StaticHashFile hashFile) throws IOException {
+        this.hashFile = hashFile;
 
         setTitle("Static Hash File Application");
         setSize(1000, 650);
@@ -40,14 +42,9 @@ public class RecordTableFrame extends JFrame {
             @Override
             public void windowClosed(WindowEvent e) {
                 try {
-                    RecordTableFrame.this.manager.close();
+                    RecordTableFrame.this.hashFile.close();
                 } catch (IOException exception) {
-                    JOptionPane.showMessageDialog(
-                            null,
-                            exception.getMessage(),
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE
-                    );
+                    JOptionPane.showMessageDialog(null, exception.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -66,14 +63,10 @@ public class RecordTableFrame extends JFrame {
         deleteField = new JTextField();
 
         add(createTopPanel(), BorderLayout.NORTH);
-        add(new JScrollPane(createTable()), BorderLayout.CENTER);
+        add(new JScrollPane(new JTable(model)), BorderLayout.CENTER);
         add(createBottomPanel(), BorderLayout.SOUTH);
 
         refreshTable();
-    }
-
-    private JTable createTable() {
-        return new JTable(model);
     }
 
     private JPanel createTopPanel() {
@@ -99,10 +92,6 @@ public class RecordTableFrame extends JFrame {
         JButton insertButton = new JButton("Insert");
         insertButton.addActionListener(e -> insertRecord());
         insertPanel.add(insertButton);
-
-        insertNameField.setToolTipText("Municipality name");
-        insertPopulationField.setToolTipText("Population");
-        insertAltitudeField.setToolTipText("Altitude");
 
         JPanel deletePanel = new JPanel(new BorderLayout(8, 0));
         deletePanel.setBorder(BorderFactory.createTitledBorder("Delete Municipality"));
@@ -133,30 +122,12 @@ public class RecordTableFrame extends JFrame {
             }
         });
 
-        JButton printAllButton = new JButton("Print All To Console");
-        printAllButton.addActionListener(e -> {
-            try {
-                manager.printAll();
-                JOptionPane.showMessageDialog(this, "All records were printed to the console.");
-            } catch (IOException exception) {
-                showError(exception.getMessage());
-            }
-        });
+        JButton showInfoButton = new JButton("Show File Info");
+        showInfoButton.addActionListener(e -> showFileInfo());
 
-        JButton fileInfoButton = new JButton("Show File Info");
-        fileInfoButton.addActionListener(e -> {
-            try {
-                manager.printInfo();
-                JOptionPane.showMessageDialog(this, "File info was printed to the console.");
-            } catch (IOException exception) {
-                showError(exception.getMessage());
-            }
-        });
-
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 8, 0));
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 8, 0));
         buttonPanel.add(refreshButton);
-        buttonPanel.add(printAllButton);
-        buttonPanel.add(fileInfoButton);
+        buttonPanel.add(showInfoButton);
 
         bottomPanel.add(buttonPanel, BorderLayout.EAST);
         return bottomPanel;
@@ -165,7 +136,7 @@ public class RecordTableFrame extends JFrame {
     private void refreshTable() throws IOException {
         model.setRowCount(0);
 
-        List<MunicipalityRecord> records = manager.getAllRecords();
+        List<MunicipalityRecord> records = hashFile.getAllRecords();
         for (MunicipalityRecord record : records) {
             model.addRow(new Object[]{
                     record.getName(),
@@ -186,7 +157,7 @@ public class RecordTableFrame extends JFrame {
         }
 
         try {
-            MunicipalityRecord record = manager.find(name);
+            MunicipalityRecord record = hashFile.find(name);
 
             if (record == null) {
                 JOptionPane.showMessageDialog(this, "Record not found.");
@@ -217,7 +188,7 @@ public class RecordTableFrame extends JFrame {
             int population = Integer.parseInt(populationText);
             int altitude = Integer.parseInt(altitudeText);
 
-            boolean inserted = manager.insert(name, population, altitude);
+            boolean inserted = hashFile.insert(new MunicipalityRecord(name, population, altitude));
 
             if (!inserted) {
                 JOptionPane.showMessageDialog(this, "Record already exists.");
@@ -245,7 +216,7 @@ public class RecordTableFrame extends JFrame {
         }
 
         try {
-            boolean deleted = manager.delete(name);
+            boolean deleted = hashFile.delete(name);
 
             if (!deleted) {
                 JOptionPane.showMessageDialog(this, "Record not found.");
@@ -260,23 +231,25 @@ public class RecordTableFrame extends JFrame {
         }
     }
 
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    private void showFileInfo() {
+        try {
+            FileHeader header = hashFile.getFileHeader();
+
+            String message =
+                    "File name: " + hashFile.getFileName()
+                            + "\nPrimary block count: " + header.getPrimaryBlockCount()
+                            + "\nBlock factor: " + header.getBlockFactor()
+                            + "\nRecord size: " + header.getRecordSize() + " bytes"
+                            + "\nBlock size: " + header.getBlockSize() + " bytes"
+                            + "\nOverflow block count: " + header.getOverflowBlockCount();
+
+            JOptionPane.showMessageDialog(this, message);
+        } catch (IOException exception) {
+            showError(exception.getMessage());
+        }
     }
 
-    public interface DatabaseManagerBridge {
-        MunicipalityRecord find(String name) throws IOException;
-
-        boolean insert(String name, int population, int altitude) throws IOException;
-
-        boolean delete(String name) throws IOException;
-
-        List<MunicipalityRecord> getAllRecords() throws IOException;
-
-        void printAll() throws IOException;
-
-        void printInfo() throws IOException;
-
-        void close() throws IOException;
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 }

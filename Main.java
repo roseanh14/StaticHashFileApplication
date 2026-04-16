@@ -1,19 +1,33 @@
+import Algorithm.RecordGenerator;
+import Algorithm.StaticHashFile;
+import Data.MunicipalityRecord;
 import GUI.RecordTableFrame;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 public class Main {
+    private static final String FILE_NAME = "municipality_hash.dat";
+    private static final int PRIMARY_BLOCK_COUNT = 2000;
+    private static final int BLOCK_FACTOR = 3;
+
     public static void main(String[] args) {
         try {
-            DatabaseManager manager = new DatabaseManager();
+            File file = new File(FILE_NAME);
+            if (file.exists() && !file.delete()) {
+                throw new IOException("Unable to delete existing file.");
+            }
 
-            System.out.println("Generating 10000 random records...");
-            manager.generateData(10000);
+            StaticHashFile hashFile = new StaticHashFile(FILE_NAME, PRIMARY_BLOCK_COUNT, BLOCK_FACTOR);
 
-            System.out.println("Generated record count: " + manager.countAllRecords());
-            manager.printInfo();
+            RecordGenerator generator = new RecordGenerator();
+            Set<MunicipalityRecord> records = generator.generateUniqueRecords(10000);
+            hashFile.insertAll(records);
 
-            RecordTableFrame frame = new RecordTableFrame(manager);
+            System.out.println("Generated record count: " + hashFile.countAllRecords());
+
+            RecordTableFrame frame = new RecordTableFrame(hashFile);
             frame.setVisible(true);
         } catch (IOException exception) {
             System.out.println("File error: " + exception.getMessage());

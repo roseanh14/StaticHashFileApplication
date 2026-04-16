@@ -1,11 +1,5 @@
 package Data;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 public class MunicipalityRecord {
     public static final int NAME_LENGTH = 40;
     public static final byte EMPTY = 0;
@@ -44,61 +38,20 @@ public class MunicipalityRecord {
         return altitude;
     }
 
+    public byte getStatus() {
+        return status;
+    }
+
     public boolean isActive() {
         return status == ACTIVE;
     }
 
+    public void setStatus(byte status) {
+        this.status = status;
+    }
+
     public void markDeleted() {
-        status = DELETED;
-    }
-
-    public byte[] toByteArray() throws IOException {
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        DataOutputStream output = new DataOutputStream(byteStream);
-
-        String fixedName = formatName(name);
-        for (int i = 0; i < fixedName.length(); i++) {
-            output.writeChar(fixedName.charAt(i));
-        }
-
-        output.writeInt(population);
-        output.writeInt(altitude);
-        output.writeByte(status);
-
-        return byteStream.toByteArray();
-    }
-
-    public static MunicipalityRecord fromByteArray(byte[] data) throws IOException {
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-        DataInputStream input = new DataInputStream(byteStream);
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < NAME_LENGTH; i++) {
-            builder.append(input.readChar());
-        }
-
-        MunicipalityRecord record = new MunicipalityRecord();
-        record.name = builder.toString().trim();
-        record.population = input.readInt();
-        record.altitude = input.readInt();
-        record.status = input.readByte();
-
-        return record;
-    }
-
-    private static String formatName(String value) {
-        String text = value == null ? "" : value;
-
-        if (text.length() > NAME_LENGTH) {
-            return text.substring(0, NAME_LENGTH);
-        }
-
-        StringBuilder builder = new StringBuilder(text);
-        while (builder.length() < NAME_LENGTH) {
-            builder.append(' ');
-        }
-
-        return builder.toString();
+        this.status = DELETED;
     }
 
     @Override
