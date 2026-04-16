@@ -39,7 +39,7 @@ public final class BlockSerializer {
             builder.append(input.readChar());
         }
 
-        MunicipalityRecord record = new MunicipalityRecord();
+        MunicipalityRecord record;
         record = new MunicipalityRecord(builder.toString().trim(), input.readInt(), input.readInt());
         record.setStatus(input.readByte());
 

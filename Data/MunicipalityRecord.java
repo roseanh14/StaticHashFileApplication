@@ -7,9 +7,9 @@ public class MunicipalityRecord {
     public static final byte DELETED = 2;
     public static final int BYTE_SIZE = NAME_LENGTH * 2 + Integer.BYTES + Integer.BYTES + 1;
 
-    private String name;
-    private int population;
-    private int altitude;
+    private final String name;
+    private final int population;
+    private final int altitude;
     private byte status;
 
     public MunicipalityRecord() {

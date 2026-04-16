@@ -1,10 +1,10 @@
 package Data;
 
 public class FileHeader {
-    private int primaryBlockCount;
-    private int blockFactor;
-    private int recordSize;
-    private int blockSize;
+    private final int primaryBlockCount;
+    private final int blockFactor;
+    private final int recordSize;
+    private final int blockSize;
     private int overflowBlockCount;
 
     public FileHeader(int primaryBlockCount, int blockFactor, int recordSize, int blockSize, int overflowBlockCount) {
