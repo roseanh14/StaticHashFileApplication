@@ -35,12 +35,16 @@ public final class BlockSerializer {
         DataInputStream input = new DataInputStream(byteStream);
 
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < MunicipalityRecord.NAME_LENGTH; i++) {
+        for (int i = 0; i < MunicipalityRecord.getNameLength(); i++) { //nahrada volani public getteru za MunicipalityRecord.NAME_LENGTH
             builder.append(input.readChar());
         }
 
+        /*
+        staci dat jen do jednoho radku, puvodni kod nechavam zakomentovany
         MunicipalityRecord record;
         record = new MunicipalityRecord(builder.toString().trim(), input.readInt(), input.readInt());
+        */
+        MunicipalityRecord record = new MunicipalityRecord(builder.toString().trim(), input.readInt(), input.readInt());
         record.setStatus(input.readByte());
 
         return record;
@@ -70,7 +74,7 @@ public final class BlockSerializer {
 
         MunicipalityRecord[] records = new MunicipalityRecord[blockFactor];
         for (int i = 0; i < blockFactor; i++) {
-            byte[] recordBytes = new byte[MunicipalityRecord.BYTE_SIZE];
+            byte[] recordBytes = new byte[MunicipalityRecord.getByteSize()]; //nahrada za MunicipalityRecord.BYTE_SIZE
             input.readFully(recordBytes);
             records[i] = bytesToMunicipality(recordBytes);
         }
@@ -110,18 +114,18 @@ public final class BlockSerializer {
     }
 
     public static int getBlockSize(int blockFactor) {
-        return Integer.BYTES + Integer.BYTES + blockFactor * MunicipalityRecord.BYTE_SIZE;
+        return Integer.BYTES + Integer.BYTES + blockFactor * MunicipalityRecord.getByteSize(); //nahrada za MunicipalityRecord.BYTE_SIZE
     }
 
     private static String formatName(String value) {
         String text = value == null ? "" : value;
 
-        if (text.length() > MunicipalityRecord.NAME_LENGTH) {
-            return text.substring(0, MunicipalityRecord.NAME_LENGTH);
+        if (text.length() > MunicipalityRecord.getNameLength()) { //nahrada za MunicipalityRecord.NAME_LENGTH
+            return text.substring(0, MunicipalityRecord.getNameLength()); //nahrada za MunicipalityRecord.NAME_LENGTH
         }
 
         StringBuilder builder = new StringBuilder(text);
-        while (builder.length() < MunicipalityRecord.NAME_LENGTH) {
+        while (builder.length() < MunicipalityRecord.getNameLength()) { //nahrada za MunicipalityRecord.NAME_LENGTH
             builder.append(' ');
         }
 

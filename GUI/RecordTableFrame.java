@@ -148,6 +148,7 @@ public class RecordTableFrame extends JFrame {
         setTitle("Static Hash File Application - Records: " + records.size());
     }
 
+    //funguje ok
     private void searchRecord() {
         String name = searchField.getText().trim();
 
@@ -174,6 +175,7 @@ public class RecordTableFrame extends JFrame {
         }
     }
 
+    //funguje v poradku - testovano pri vygenerovani 10ti recordu, i v tabulce se zobrazuje v poradku
     private void insertRecord() {
         String name = insertNameField.getText().trim();
         String populationText = insertPopulationField.getText().trim();
@@ -207,6 +209,7 @@ public class RecordTableFrame extends JFrame {
         }
     }
 
+    //funguje ok
     private void deleteRecord() {
         String name = deleteField.getText().trim();
 

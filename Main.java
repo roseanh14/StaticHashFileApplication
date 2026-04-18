@@ -22,7 +22,7 @@ public class Main {
             StaticHashFile hashFile = new StaticHashFile(FILE_NAME, PRIMARY_BLOCK_COUNT, BLOCK_FACTOR);
 
             RecordGenerator generator = new RecordGenerator();
-            Set<MunicipalityRecord> records = generator.generateUniqueRecords(10000);
+            Set<MunicipalityRecord> records = generator.generateUniqueRecords(10); //zmena na generovani pouze 10ti zaznamu kvuli testovani
             hashFile.insertAll(records);
 
             System.out.println("Generated record count: " + hashFile.countAllRecords());

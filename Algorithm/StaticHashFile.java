@@ -30,7 +30,7 @@ public class StaticHashFile {
             header = new FileHeader(
                     primaryBlockCount,
                     blockFactor,
-                    MunicipalityRecord.BYTE_SIZE,
+                    MunicipalityRecord.getByteSize(), //nahrada za MunicipalityRecord.BYTE_SIZE
                     storage.getBlockSize(),
                     0
             );
