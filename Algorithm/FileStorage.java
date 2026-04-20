@@ -54,16 +54,20 @@ public class FileStorage {
         return BlockSerializer.bytesToBlock(data, blockFactor);
     }
 
-    public void writeOverflowBlock(int overflowBlockIndex, Block block) throws IOException {
-        file.seek(getOverflowBlockOffset(overflowBlockIndex));
+    public void writeBlockAtOffset(long offset, Block block) throws IOException {
+        file.seek(offset);
         file.write(BlockSerializer.blockToBytes(block, blockFactor));
     }
 
-    public Block readOverflowBlock(int overflowBlockIndex) throws IOException {
-        file.seek(getOverflowBlockOffset(overflowBlockIndex));
+    public Block readBlockAtOffset(long offset) throws IOException {
+        file.seek(offset);
         byte[] data = new byte[blockSize];
         file.readFully(data);
         return BlockSerializer.bytesToBlock(data, blockFactor);
+    }
+
+    public long getOverflowBlockOffsetByIndex(int overflowBlockIndex) {
+        return getOverflowBlockOffset(overflowBlockIndex);
     }
 
     public void close() throws IOException {

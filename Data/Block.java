@@ -2,12 +2,12 @@ package Data;
 
 public class Block {
     private int validRecordCount;
-    private int nextOverflowBlockIndex;
+    private long nextOverflowBlockOffset;
     private MunicipalityRecord[] records;
 
     public Block(int blockFactor) {
         this.validRecordCount = 0;
-        this.nextOverflowBlockIndex = -1;
+        this.nextOverflowBlockOffset = -1;
         this.records = new MunicipalityRecord[blockFactor];
 
         for (int i = 0; i < blockFactor; i++) {
@@ -23,12 +23,12 @@ public class Block {
         this.validRecordCount = validRecordCount;
     }
 
-    public int getNextOverflowBlockIndex() {
-        return nextOverflowBlockIndex;
+    public long getNextOverflowBlockOffset() {
+        return nextOverflowBlockOffset;
     }
 
-    public void setNextOverflowBlockIndex(int nextOverflowBlockIndex) {
-        this.nextOverflowBlockIndex = nextOverflowBlockIndex;
+    public void setNextOverflowBlockOffset(long nextOverflowBlockOffset) {
+        this.nextOverflowBlockOffset = nextOverflowBlockOffset;
     }
 
     public MunicipalityRecord[] getRecords() {

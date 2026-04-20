@@ -63,39 +63,39 @@ public class StaticHashFile {
             return true;
         }
 
-        int overflowIndex = primaryBlock.getNextOverflowBlockIndex();
+        long overflowOffset = primaryBlock.getNextOverflowBlockOffset();
 
-        if (overflowIndex == -1) {
-            int newOverflowIndex = allocateOverflowBlock();
-            primaryBlock.setNextOverflowBlockIndex(newOverflowIndex);
+        if (overflowOffset == -1) {
+            long newOverflowOffset = allocateOverflowBlock();
+            primaryBlock.setNextOverflowBlockOffset(newOverflowOffset);
             storage.writePrimaryBlock(primaryIndex, primaryBlock);
 
-            Block overflowBlock = storage.readOverflowBlock(newOverflowIndex);
+            Block overflowBlock = storage.readBlockAtOffset(newOverflowOffset);
             addRecordToBlock(overflowBlock, record);
-            storage.writeOverflowBlock(newOverflowIndex, overflowBlock);
+            storage.writeBlockAtOffset(newOverflowOffset, overflowBlock);
             return true;
         }
 
         while (true) {
-            Block overflowBlock = storage.readOverflowBlock(overflowIndex);
+            Block overflowBlock = storage.readBlockAtOffset(overflowOffset);
 
             if (addRecordToBlock(overflowBlock, record)) {
-                storage.writeOverflowBlock(overflowIndex, overflowBlock);
+                storage.writeBlockAtOffset(overflowOffset, overflowBlock);
                 return true;
             }
 
-            if (overflowBlock.getNextOverflowBlockIndex() == -1) {
-                int newOverflowIndex = allocateOverflowBlock();
-                overflowBlock.setNextOverflowBlockIndex(newOverflowIndex);
-                storage.writeOverflowBlock(overflowIndex, overflowBlock);
+            if (overflowBlock.getNextOverflowBlockOffset() == -1) {
+                long newOverflowOffset = allocateOverflowBlock();
+                overflowBlock.setNextOverflowBlockOffset(newOverflowOffset);
+                storage.writeBlockAtOffset(overflowOffset, overflowBlock);
 
-                Block newOverflowBlock = storage.readOverflowBlock(newOverflowIndex);
+                Block newOverflowBlock = storage.readBlockAtOffset(newOverflowOffset);
                 addRecordToBlock(newOverflowBlock, record);
-                storage.writeOverflowBlock(newOverflowIndex, newOverflowBlock);
+                storage.writeBlockAtOffset(newOverflowOffset, newOverflowBlock);
                 return true;
             }
 
-            overflowIndex = overflowBlock.getNextOverflowBlockIndex();
+            overflowOffset = overflowBlock.getNextOverflowBlockOffset();
         }
     }
 
@@ -108,17 +108,17 @@ public class StaticHashFile {
             return found;
         }
 
-        int overflowIndex = primaryBlock.getNextOverflowBlockIndex();
+        long overflowOffset = primaryBlock.getNextOverflowBlockOffset();
 
-        while (overflowIndex != -1) {
-            Block overflowBlock = storage.readOverflowBlock(overflowIndex);
+        while (overflowOffset != -1) {
+            Block overflowBlock = storage.readBlockAtOffset(overflowOffset);
             found = findInBlock(overflowBlock, key);
 
             if (found != null) {
                 return found;
             }
 
-            overflowIndex = overflowBlock.getNextOverflowBlockIndex();
+            overflowOffset = overflowBlock.getNextOverflowBlockOffset();
         }
 
         return null;
@@ -133,17 +133,17 @@ public class StaticHashFile {
             return true;
         }
 
-        int overflowIndex = primaryBlock.getNextOverflowBlockIndex();
+        long overflowOffset = primaryBlock.getNextOverflowBlockOffset();
 
-        while (overflowIndex != -1) {
-            Block overflowBlock = storage.readOverflowBlock(overflowIndex);
+        while (overflowOffset != -1) {
+            Block overflowBlock = storage.readBlockAtOffset(overflowOffset);
 
             if (deleteFromBlock(overflowBlock, key)) {
-                storage.writeOverflowBlock(overflowIndex, overflowBlock);
+                storage.writeBlockAtOffset(overflowOffset, overflowBlock);
                 return true;
             }
 
-            overflowIndex = overflowBlock.getNextOverflowBlockIndex();
+            overflowOffset = overflowBlock.getNextOverflowBlockOffset();
         }
 
         return false;
@@ -154,13 +154,13 @@ public class StaticHashFile {
 
         for (int i = 0; i < primaryBlockCount; i++) {
             Block primaryBlock = storage.readPrimaryBlock(i);
-            collectActiveRecords(primaryBlock, result);
+            collectInUseRecords(primaryBlock, result);
 
-            int overflowIndex = primaryBlock.getNextOverflowBlockIndex();
-            while (overflowIndex != -1) {
-                Block overflowBlock = storage.readOverflowBlock(overflowIndex);
-                collectActiveRecords(overflowBlock, result);
-                overflowIndex = overflowBlock.getNextOverflowBlockIndex();
+            long overflowOffset = primaryBlock.getNextOverflowBlockOffset();
+            while (overflowOffset != -1) {
+                Block overflowBlock = storage.readBlockAtOffset(overflowOffset);
+                collectInUseRecords(overflowBlock, result);
+                overflowOffset = overflowBlock.getNextOverflowBlockOffset();
             }
         }
 
@@ -172,13 +172,13 @@ public class StaticHashFile {
 
         for (int i = 0; i < primaryBlockCount; i++) {
             Block primaryBlock = storage.readPrimaryBlock(i);
-            count += countActiveInBlock(primaryBlock);
+            count += countInUseInBlock(primaryBlock);
 
-            int overflowIndex = primaryBlock.getNextOverflowBlockIndex();
-            while (overflowIndex != -1) {
-                Block overflowBlock = storage.readOverflowBlock(overflowIndex);
-                count += countActiveInBlock(overflowBlock);
-                overflowIndex = overflowBlock.getNextOverflowBlockIndex();
+            long overflowOffset = primaryBlock.getNextOverflowBlockOffset();
+            while (overflowOffset != -1) {
+                Block overflowBlock = storage.readBlockAtOffset(overflowOffset);
+                count += countInUseInBlock(overflowBlock);
+                overflowOffset = overflowBlock.getNextOverflowBlockOffset();
             }
         }
 
@@ -234,7 +234,7 @@ public class StaticHashFile {
         return false;
     }
 
-    private void collectActiveRecords(Block block, List<MunicipalityRecord> result) {
+    private void collectInUseRecords(Block block, List<MunicipalityRecord> result) {
         for (MunicipalityRecord record : block.getRecords()) {
             if (record.isActive()) {
                 result.add(record);
@@ -242,7 +242,7 @@ public class StaticHashFile {
         }
     }
 
-    private int countActiveInBlock(Block block) {
+    private int countInUseInBlock(Block block) {
         int count = 0;
 
         for (MunicipalityRecord record : block.getRecords()) {
@@ -254,15 +254,16 @@ public class StaticHashFile {
         return count;
     }
 
-    private int allocateOverflowBlock() throws IOException {
+    private long allocateOverflowBlock() throws IOException {
         int newOverflowBlockIndex = header.getOverflowBlockCount();
         Block newBlock = new Block(blockFactor);
 
-        storage.writeOverflowBlock(newOverflowBlockIndex, newBlock);
+        long newOverflowOffset = storage.getOverflowBlockOffsetByIndex(newOverflowBlockIndex);
+        storage.writeBlockAtOffset(newOverflowOffset, newBlock);
 
         header.setOverflowBlockCount(newOverflowBlockIndex + 1);
         storage.writeHeader(header);
 
-        return newOverflowBlockIndex;
+        return newOverflowOffset;
     }
 }

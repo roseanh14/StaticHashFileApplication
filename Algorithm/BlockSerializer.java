@@ -51,7 +51,7 @@ public final class BlockSerializer {
         DataOutputStream output = new DataOutputStream(byteStream);
 
         output.writeInt(block.getValidRecordCount());
-        output.writeInt(block.getNextOverflowBlockIndex());
+        output.writeLong(block.getNextOverflowBlockOffset());
 
         for (int i = 0; i < blockFactor; i++) {
             output.write(municipalityToBytes(block.getRecords()[i]));
@@ -66,7 +66,7 @@ public final class BlockSerializer {
 
         Block block = new Block(blockFactor);
         block.setValidRecordCount(input.readInt());
-        block.setNextOverflowBlockIndex(input.readInt());
+        block.setNextOverflowBlockOffset(input.readLong());
 
         MunicipalityRecord[] records = new MunicipalityRecord[blockFactor];
         for (int i = 0; i < blockFactor; i++) {
@@ -110,7 +110,7 @@ public final class BlockSerializer {
     }
 
     public static int getBlockSize(int blockFactor) {
-        return Integer.BYTES + Integer.BYTES + blockFactor * MunicipalityRecord.BYTE_SIZE;
+        return Integer.BYTES + Long.BYTES + blockFactor * MunicipalityRecord.BYTE_SIZE;
     }
 
     private static String formatName(String value) {

@@ -10,6 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingWorker;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
@@ -66,7 +67,7 @@ public class RecordTableFrame extends JFrame {
         add(new JScrollPane(new JTable(model)), BorderLayout.CENTER);
         add(createBottomPanel(), BorderLayout.SOUTH);
 
-        refreshTable();
+        refreshTableAsync();
     }
 
     private JPanel createTopPanel() {
@@ -113,30 +114,35 @@ public class RecordTableFrame extends JFrame {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(e -> {
-            try {
-                refreshTable();
-            } catch (IOException exception) {
-                showError(exception.getMessage());
-            }
-        });
-
         JButton showInfoButton = new JButton("Show File Info");
         showInfoButton.addActionListener(e -> showFileInfo());
 
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 8, 0));
-        buttonPanel.add(refreshButton);
-        buttonPanel.add(showInfoButton);
-
-        bottomPanel.add(buttonPanel, BorderLayout.EAST);
+        bottomPanel.add(showInfoButton, BorderLayout.EAST);
         return bottomPanel;
     }
 
-    private void refreshTable() throws IOException {
+    private void refreshTableAsync() {
+        new SwingWorker<List<MunicipalityRecord>, Void>() {
+            @Override
+            protected List<MunicipalityRecord> doInBackground() throws Exception {
+                return hashFile.getAllRecords();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<MunicipalityRecord> records = get();
+                    refreshTable(records);
+                } catch (Exception exception) {
+                    showError(exception.getMessage());
+                }
+            }
+        }.execute();
+    }
+
+    private void refreshTable(List<MunicipalityRecord> records) {
         model.setRowCount(0);
 
-        List<MunicipalityRecord> records = hashFile.getAllRecords();
         for (MunicipalityRecord record : records) {
             model.addRow(new Object[]{
                     record.getName(),
@@ -195,7 +201,7 @@ public class RecordTableFrame extends JFrame {
                 return;
             }
 
-            refreshTable();
+            refreshTableAsync();
             insertNameField.setText("");
             insertPopulationField.setText("");
             insertAltitudeField.setText("");
@@ -223,7 +229,7 @@ public class RecordTableFrame extends JFrame {
                 return;
             }
 
-            refreshTable();
+            refreshTableAsync();
             deleteField.setText("");
             JOptionPane.showMessageDialog(this, "Record deleted.");
         } catch (IOException exception) {
